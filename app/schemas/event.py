@@ -1,12 +1,12 @@
 from typing import Optional
-from datetime import date as pdate
+from datetime import date
 from pydantic import BaseModel
 
 
 class EventBase(BaseModel):
     title: str
     location: str
-    date: pdate
+    date: date
 
 
 class EventCreate(EventBase):
@@ -16,7 +16,7 @@ class EventCreate(EventBase):
 class EventUpdate(BaseModel):
     title: Optional[str] = None
     location: Optional[str] = None
-    date: Optional[pdate] = None
+    date: Optional[date] = None # type: ignore
 
 
 class EventResponse(EventBase):
@@ -34,7 +34,7 @@ class RegistrationBase(BaseModel):
 
 class RegistrationResponse(RegistrationBase):
     id: int
-    registration_date: pdate
+    registration_date: date
     attended: bool
 
     class Config:

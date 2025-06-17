@@ -19,7 +19,7 @@ class EventService:
             id=new_id,
             title=event_data.title,
             location=event_data.location,
-            event_date=event_data.date,
+            date=event_data.date,
         )
         events.append(event)
         return event
@@ -56,7 +56,7 @@ class EventService:
         if event_data.location is not None:
             event.location = event_data.location
         if event_data.date is not None:
-            event.event_date = event_data.date
+            event.date = event_data.date
         
         return event
 
