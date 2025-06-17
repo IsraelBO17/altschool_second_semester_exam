@@ -64,7 +64,7 @@ async def get_event_attendees(
     return attendees
 
 
-@router.patch("/{event_id}", response_model=EventResponse)
+@router.put("/{event_id}", response_model=EventResponse)
 async def update_event(
     event_id: int,
     event_data: EventUpdate,
@@ -81,7 +81,7 @@ async def update_event(
     return updated_event
 
 
-@router.delete("/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.put("/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_event(
     event_id: int,
     session: SessionDep = SessionDep  # type: ignore

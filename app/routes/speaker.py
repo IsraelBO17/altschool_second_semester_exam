@@ -41,7 +41,7 @@ async def get_speaker(
     return speaker
 
 
-@router.patch("/{speaker_id}", response_model=SpeakerResponse)
+@router.put("/{speaker_id}", response_model=SpeakerResponse)
 async def update_speaker(
     speaker_id: int,
     speaker_data: SpeakerUpdate,
@@ -55,7 +55,7 @@ async def update_speaker(
     return speaker
 
 
-@router.delete("/{speaker_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.put("/{speaker_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_speaker(
     speaker_id: int,
     session: SessionDep = SessionDep # type: ignore
