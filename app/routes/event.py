@@ -53,7 +53,18 @@ async def get_event(
     return event
 
 
-@router.put("/{event_id}", response_model=EventResponse)
+@router.get("/{event_id}/attendees", response_model=List[UserResponse])
+async def get_event_attendees(
+    event_id: int,
+    session: SessionDep = SessionDep  # type: ignore
+):
+    """Get all attendees for an event"""
+    event_service = EventService(session)
+    attendees = await event_service.get_event_attendees(event_id)
+    return attendees
+
+
+@router.patch("/{event_id}", response_model=EventResponse)
 async def update_event(
     event_id: int,
     event_data: EventUpdate,
@@ -84,15 +95,4 @@ async def delete_event(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Event not found"
         )
-
-
-@router.get("/{event_id}/attendees", response_model=List[UserResponse])
-async def get_event_attendees(
-    event_id: int,
-    session: SessionDep = SessionDep  # type: ignore
-):
-    """Get all attendees for an event"""
-    event_service = EventService(session)
-    attendees = await event_service.get_event_attendees(event_id)
-    return attendees
 

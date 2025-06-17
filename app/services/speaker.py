@@ -60,7 +60,7 @@ class SpeakerService:
         if not speaker:
             return False
         
-        self.session.delete(speaker)
+        await self.session.delete(speaker)
         await self.session.commit()
         return True
 

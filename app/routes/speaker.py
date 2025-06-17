@@ -41,7 +41,7 @@ async def get_speaker(
     return speaker
 
 
-@router.put("/{speaker_id}", response_model=SpeakerResponse)
+@router.patch("/{speaker_id}", response_model=SpeakerResponse)
 async def update_speaker(
     speaker_id: int,
     speaker_data: SpeakerUpdate,

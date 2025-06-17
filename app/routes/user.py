@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 from fastapi import APIRouter, HTTPException, Query, status
 from app.config.database import SessionDep
 from app.services.user import UserService
@@ -33,20 +33,20 @@ async def get_users(
 ):
     """Get all users with pagination"""
     user_service = UserService(session)
-    return await user_service.get_all_users(skip=skip, limit=limit, active_only=active_only)
+    users = await user_service.get_all_users(skip=skip, limit=limit, active_only=active_only)
+    return users
 
 
-@router.get("/{user_id}", response_model=UserResponse)
-async def get_user(
-    user_id: int,
-    session: SessionDep = SessionDep # type: ignore
+@router.get("/attended-events", response_model=List[UserResponse])
+async def get_users_who_attended_events(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    session: SessionDep = SessionDep  # type: ignore
 ):
-    """Get user by ID"""
+    """Filter users who attended at least one event"""
     user_service = UserService(session)
-    user = await user_service.get_user_by_id(user_id)
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    return user
+    users = await user_service.get_users_who_attended_events(skip=skip, limit=limit)
+    return users
 
 
 @router.get("/email/{email}", response_model=UserResponse)
@@ -62,7 +62,20 @@ async def get_user_by_email(
     return user
 
 
-@router.put("/{user_id}", response_model=UserResponse)
+@router.get("/{user_id}", response_model=UserResponse)
+async def get_user(
+    user_id: int,
+    session: SessionDep = SessionDep # type: ignore
+):
+    """Get user by ID"""
+    user_service = UserService(session)
+    user = await user_service.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return user
+
+
+@router.patch("/{user_id}", response_model=UserResponse)
 async def update_user(
     user_id: int,
     user_data: UserUpdate,
@@ -94,15 +107,4 @@ async def delete_user(
     
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-
-@router.get("/attended-events", response_model=Optional[List[UserResponse]])
-async def get_users_who_attended_events(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
-    session: SessionDep = SessionDep  # type: ignore
-):
-    """Filter users who attended at least one event"""
-    user_service = UserService(session)
-    return await user_service.get_users_who_attended_events(skip=skip, limit=limit)
 
