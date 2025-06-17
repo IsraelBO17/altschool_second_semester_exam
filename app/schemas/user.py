@@ -3,8 +3,8 @@ from pydantic import BaseModel, EmailStr
 
 
 class UserBase(BaseModel):
-    user_name: str
-    user_email: EmailStr
+    name: str
+    email: EmailStr
 
 
 class UserCreate(UserBase):
@@ -12,13 +12,13 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(BaseModel):
-    user_name: Optional[str] = None
-    user_email: Optional[EmailStr] = None
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
 
 
 class UserResponse(UserBase):
-    user_id: int
-    user_is_active: bool
+    id: int
+    is_active: bool
 
     class Config:
         from_attributes = True

@@ -1,96 +1,103 @@
 from typing import List, Optional
-from sqlmodel import select
-from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 
-from app.config.database import SessionDep
+from app.models import User
+from app.database import users, registrations
 from app.schemas.user import UserCreate, UserUpdate
-from app.models import User, Registration
 
 
 class UserService:
     """Service class for User CRUD operations"""
-
-    def __init__(self, session: SessionDep = SessionDep): # type: ignore
-        self.session = session
     
-    async def create_user(self, user_data: UserCreate) -> User:
+    def create_user(self, user_data: UserCreate) -> User:
         """Create a new user"""
-        try:
-            user = User(**user_data.model_dump())
-            self.session.add(user)
-            await self.session.commit()
-            await self.session.refresh(user)
-            return user
-        except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User with this email already exists"
-            )
+        # Check if email already exists
+        for user in users:
+            if user.email == user_data.email:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="User with this email already exists"
+                )
+        
+        # Generate new ID
+        new_id = len(users) + 1
+        
+        user = User(id=new_id, name=user_data.name, email=user_data.email)
+        users.append(user)
+        return user
     
-    async def get_user_by_id(self, user_id: int) -> Optional[User]:
+    def get_user_by_id(self, user_id: int) -> Optional[User]:
         """Get user by ID"""
-        statement = select(User).where(User.user_id == user_id)
-        result = await self.session.exec(statement)
-        return result.first()
+        for user in users:
+            if user.id == user_id:
+                return user
+        return None
     
-    async def get_user_by_email(self, email: str) -> Optional[User]:
+    def get_user_by_email(self, email: str) -> Optional[User]:
         """Get user by email"""
-        statement = select(User).where(User.user_email == email)
-        result = await self.session.exec(statement)
-        return result.first()
+        for user in users:
+            if user.email == email:
+                return user
+        return None
     
-    async def get_all_users(self, skip: int = 0, limit: int = 100, active_only: bool = True) -> List[User]:
-        """Get all users with pagination"""
-        statement = select(User)
+    def get_all_users(self, active_only: bool = True) -> List[User]:
+        """Get all users"""
         if active_only:
-            statement = statement.where(User.user_is_active == True)
-        statement = statement.offset(skip).limit(limit)
-        result = await self.session.exec(statement)
-        return list(result.all())
+            filtered_users = [u for u in users if u.is_active]
+        else:
+            filtered_users = users
+        
+        return filtered_users
     
-    async def get_users_who_attended_events(self, skip: int = 0, limit: int = 100) -> List[User]:
+    def get_users_who_attended_events(self) -> List[User]:
         """Get users who attended at least one event"""
-        statement = (
-            select(User)
-            .join(Registration)
-            .where(Registration.user_attended == True)
-            .distinct()
-            .offset(skip)
-            .limit(limit)
-        )
-        result = await self.session.exec(statement)
-        return list(result.all())
+        # Get user IDs who attended events
+        attended_user_ids = set()
+        for registration in registrations:
+            if registration.attended:
+                attended_user_ids.add(registration.user_id)
+        
+        # Get users who attended events
+        attended_users = []
+        for user in users:
+            if user.id in attended_user_ids:
+                attended_users.append(user)
+        
+        return attended_users
     
-    async def update_user(self, user_id: int, user_data: UserUpdate) -> Optional[User]:
+    def update_user(self, user_id: int, user_data: UserUpdate) -> Optional[User]:
         """Update user by ID"""
-        user = await self.get_user_by_id(user_id)
+        user = self.get_user_by_id(user_id)
         if not user:
             return None
         
-        user_data_dict = user_data.model_dump(exclude_unset=True)
-        for key, value in user_data_dict.items():
-            setattr(user, key, value)
+        # Check if email already exists (if updating email)
+        if user_data.email is not None and user_data.email != user.email:
+            for existing_user in users:
+                if existing_user.email == user_data.email:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Email already exists"
+                    )
         
-        try:
-            self.session.add(user)
-            await self.session.commit()
-            await self.session.refresh(user)
-            return user
-        except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already exists"
-            )
+        # Update fields
+        if user_data.name is not None:
+            user.name = user_data.name
+        if user_data.email is not None:
+            user.email = user_data.email
+        
+        return user
     
-    async def delete_user(self, user_id: int) -> bool:
-        """Delete user by ID"""
-        user = await self.get_user_by_id(user_id)
+    def delete_user(self, user_id: int) -> bool:
+        """Delete user by ID (mark as inactive)"""
+        user = self.get_user_by_id(user_id)
         if not user:
             return False
         
-        user.user_is_active = False
-        self.session.add(user)
-        await self.session.commit()
+        user.is_active = False
         return True
+    
+    def search_users_by_name(self, name_query: str) -> List[User]:
+        """Search users by name (case-insensitive partial match)"""
+        return [user for user in users if name_query.lower() in user.name.lower()]
     

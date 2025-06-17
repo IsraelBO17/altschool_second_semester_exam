@@ -1,12 +1,12 @@
 from typing import Optional
-from datetime import date
+from datetime import date as pdate
 from pydantic import BaseModel
 
 
 class EventBase(BaseModel):
-    event_title: str
-    event_location: str
-    event_date: date
+    title: str
+    location: str
+    date: pdate
 
 
 class EventCreate(EventBase):
@@ -14,14 +14,14 @@ class EventCreate(EventBase):
 
 
 class EventUpdate(BaseModel):
-    event_title: Optional[str] = None
-    event_location: Optional[str] = None
-    event_date: Optional[date] = None
+    title: Optional[str] = None
+    location: Optional[str] = None
+    date: Optional[pdate] = None
 
 
 class EventResponse(EventBase):
-    event_id: int
-    event_is_open: bool
+    id: int
+    is_open: bool
 
     class Config:
         from_attributes = True
@@ -33,9 +33,9 @@ class RegistrationBase(BaseModel):
 
 
 class RegistrationResponse(RegistrationBase):
-    registration_id: int
-    registration_date: date
-    user_attended: bool
+    id: int
+    registration_date: pdate
+    attended: bool
 
     class Config:
         from_attributes = True

@@ -3,8 +3,8 @@ from pydantic import BaseModel
 
 
 class SpeakerBase(BaseModel):
-    speaker_name: str
-    speaker_topic: str
+    name: str
+    topic: str
 
 
 class SpeakerCreate(SpeakerBase):
@@ -12,12 +12,12 @@ class SpeakerCreate(SpeakerBase):
 
 
 class SpeakerUpdate(BaseModel):
-    speaker_name: Optional[str] = None
-    speaker_topic: Optional[str] = None
+    name: Optional[str] = None
+    topic: Optional[str] = None
 
 
 class SpeakerResponse(SpeakerBase):
-    speaker_id: int
+    id: int
 
     class Config:
         from_attributes = True
